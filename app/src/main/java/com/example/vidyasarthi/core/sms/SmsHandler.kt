@@ -1,8 +1,10 @@
 package com.example.vidyasarthi.core.sms
 
 import android.content.Context
+import android.os.Build
 import android.telephony.SmsManager
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.example.vidyasarthi.core.data.VidyaSarthiRepository
 
 class SmsHandler(
@@ -20,7 +22,7 @@ class SmsHandler(
     fun handleIncomingSms(sender: String, messageBody: String) {
         Log.d(TAG, "Received SMS from $sender: $messageBody")
         repository.addLog("Received SMS from $sender")
-        
+
         if (messageBody.startsWith(CONNECTION_REQUEST_PREFIX)) {
             handleConnectionRequest(sender, messageBody)
         } else if (messageBody.startsWith(CONNECTION_ACCEPT_PREFIX)) {
@@ -31,25 +33,33 @@ class SmsHandler(
         }
     }
 
-    fun sendConnectionRequest(hostPhone: String, clientId: String) {
-        val message = "$CONNECTION_REQUEST_PREFIX$clientId"
-        sendSms(hostPhone, message)
-        repository.addLog("Sent connection request to $hostPhone")
+    fun sendConnectionRequest(hostPhone: String, clientId: String, contentType: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val message = "$CONNECTION_REQUEST_PREFIX$clientId:$contentType"
+            sendSms(hostPhone, message)
+            repository.addLog("Sent connection request to $hostPhone for $contentType")
+        }
     }
 
     private fun handleConnectionRequest(sender: String, message: String) {
         // Requirement 2: Validate client identifier
-        val clientId = message.removePrefix(CONNECTION_REQUEST_PREFIX).trim()
-        
+        val parts = message.removePrefix(CONNECTION_REQUEST_PREFIX).split(":")
+        val clientId = parts.getOrNull(0)?.trim() ?: ""
+        val contentType = parts.getOrNull(1)?.trim() ?: ""
+
         // Mock validation logic
         val isValid = validateClient(clientId)
-        
+
         if (isValid) {
             val sessionToken = java.util.UUID.randomUUID().toString().substring(0, 8)
-            sendSms(sender, "$CONNECTION_ACCEPT_PREFIX$sessionToken")
-            repository.addLog("Accepted connection from $sender")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                sendSms(sender, "$CONNECTION_ACCEPT_PREFIX$sessionToken")
+            }
+            repository.addLog("Accepted connection from $sender for $contentType")
         } else {
-            sendSms(sender, "${CONNECTION_REJECT_PREFIX}INVALID_ID")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                sendSms(sender, "${CONNECTION_REJECT_PREFIX}INVALID_ID")
+            }
             repository.addLog("Rejected connection from $sender")
         }
     }
@@ -61,12 +71,13 @@ class SmsHandler(
         repository.addLog("Connection accepted. Token: $sessionToken")
         // Ideally trigger voice call here
     }
-    
+
     private fun validateClient(clientId: String): Boolean {
         return clientId.isNotEmpty()
     }
 
-    private fun sendSms(phoneNumber: String, message: String) {
+    @RequiresApi(Build.VERSION_CODES.M)
+    fun sendSms(phoneNumber: String, message: String) {
         try {
             val smsManager = context.getSystemService(SmsManager::class.java)
             smsManager.sendTextMessage(phoneNumber, null, message, null, null)

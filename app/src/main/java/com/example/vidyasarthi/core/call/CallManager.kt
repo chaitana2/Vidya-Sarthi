@@ -4,11 +4,14 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
 import android.telecom.TelecomManager
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
+import com.example.vidyasarthi.core.data.SettingsManager
 
-class CallManager(private val context: Context) {
+class CallManager(private val context: Context, private val settingsManager: SettingsManager) {
 
     companion object {
         private const val TAG = "CallManager"
@@ -17,6 +20,7 @@ class CallManager(private val context: Context) {
     private val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
     private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
+    @RequiresApi(Build.VERSION_CODES.M)
     fun startCall(phoneNumber: String) {
         try {
             if (context.checkSelfPermission(android.Manifest.permission.CALL_PHONE) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
@@ -25,8 +29,8 @@ class CallManager(private val context: Context) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
                 Log.d(TAG, "Starting call to $phoneNumber")
-                
-                // Start the service to manage transmission
+
+                setupAudioForDataTransmission()
                 startCallService()
             } else {
                 Log.e(TAG, "Missing CALL_PHONE permission")
@@ -36,6 +40,7 @@ class CallManager(private val context: Context) {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     fun answerCall() {
         try {
             if (context.checkSelfPermission(android.Manifest.permission.ANSWER_PHONE_CALLS) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
@@ -53,6 +58,7 @@ class CallManager(private val context: Context) {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     fun endCall() {
         try {
             if (context.checkSelfPermission(android.Manifest.permission.ANSWER_PHONE_CALLS) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
@@ -70,9 +76,9 @@ class CallManager(private val context: Context) {
     private fun setupAudioForDataTransmission() {
         try {
             audioManager.mode = AudioManager.MODE_IN_CALL
-            audioManager.isSpeakerphoneOn = false
+            audioManager.isSpeakerphoneOn = !settingsManager.getMuteAudio()
             audioManager.isMicrophoneMute = true // We interact via AudioRecord/AudioTrack
-            Log.d(TAG, "Audio configured for data transmission")
+            Log.d(TAG, "Audio configured for data transmission. Speakerphone muted: ${settingsManager.getMuteAudio()}")
         } catch (e: Exception) {
             Log.e(TAG, "Error setting up audio", e)
         }

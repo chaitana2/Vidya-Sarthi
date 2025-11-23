@@ -1,72 +1,60 @@
 package com.example.vidyasarthi.core.security
 
-import android.security.keystore.KeyGenParameterSpec
-import android.security.keystore.KeyProperties
+import android.os.Build
 import android.util.Log
-import java.security.KeyStore
+import androidx.annotation.RequiresApi
+import java.security.SecureRandom
 import javax.crypto.Cipher
-import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
+import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.PBEKeySpec
+import javax.crypto.spec.SecretKeySpec
 
 class EncryptionManager {
 
     companion object {
-        private const val KEY_ALIAS = "VidyaSarthiKey"
-        private const val ANDROID_KEYSTORE = "AndroidKeyStore"
-        private const val TRANSFORMATION = "AES/CBC/PKCS7Padding"
+        private const val TAG = "EncryptionManager"
+        private const val TRANSFORMATION = "AES/CTR/NoPadding"
+        private const val ALGORITHM = "AES"
+        private const val KEY_DERIVATION_ALGORITHM = "PBKDF2WithHmacSHA256"
+        private const val ITERATION_COUNT = 1000
+        private const val KEY_LENGTH = 128 // 128-bit AES
     }
 
-    init {
-        createKey()
+    private fun deriveKey(pin: String, salt: ByteArray): SecretKey {
+        val spec = PBEKeySpec(pin.toCharArray(), salt, ITERATION_COUNT, KEY_LENGTH)
+        val factory = SecretKeyFactory.getInstance(KEY_DERIVATION_ALGORITHM)
+        val secret = factory.generateSecret(spec)
+        return SecretKeySpec(secret.encoded, ALGORITHM)
     }
 
-    private fun createKey() {
-        val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE)
-        keyStore.load(null)
-        if (!keyStore.containsAlias(KEY_ALIAS)) {
-            val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
-            val parameterSpec = KeyGenParameterSpec.Builder(
-                KEY_ALIAS,
-                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-            )
-                .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
-                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
-                .build()
-            keyGenerator.init(parameterSpec)
-            keyGenerator.generateKey()
-        }
-    }
-
-    fun encrypt(data: ByteArray): Pair<ByteArray, ByteArray>? {
+    fun encrypt(data: ByteArray, pin: String): Pair<ByteArray, ByteArray>? {
         return try {
-            val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE)
-            keyStore.load(null)
-            val secretKey = keyStore.getKey(KEY_ALIAS, null) as SecretKey
+            // Use a random salt/IV for each encryption for security
+            val iv = ByteArray(16)
+            SecureRandom().nextBytes(iv)
+            val key = deriveKey(pin, iv)
 
             val cipher = Cipher.getInstance(TRANSFORMATION)
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey)
-            val iv = cipher.iv
+            cipher.init(Cipher.ENCRYPT_MODE, key, IvParameterSpec(iv))
             val encryptedData = cipher.doFinal(data)
             Pair(encryptedData, iv)
         } catch (e: Exception) {
-            Log.e("EncryptionManager", "Encryption failed", e)
+            Log.e(TAG, "Encryption failed", e)
             null
         }
     }
 
-    fun decrypt(encryptedData: ByteArray, iv: ByteArray): ByteArray? {
+    fun decrypt(encryptedData: ByteArray, iv: ByteArray, pin: String): ByteArray? {
         return try {
-            val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE)
-            keyStore.load(null)
-            val secretKey = keyStore.getKey(KEY_ALIAS, null) as SecretKey
+            val key = deriveKey(pin, iv)
 
             val cipher = Cipher.getInstance(TRANSFORMATION)
-            val ivSpec = IvParameterSpec(iv)
-            cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec)
+            cipher.init(Cipher.DECRYPT_MODE, key, IvParameterSpec(iv))
             cipher.doFinal(encryptedData)
         } catch (e: Exception) {
-            Log.e("EncryptionManager", "Decryption failed", e)
+            Log.e(TAG, "Decryption failed", e)
             null
         }
     }

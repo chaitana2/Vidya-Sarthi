@@ -1,3 +1,29 @@
 <resources>
     <string name="app_name">Vidya Sarthi</string>
+    <string name="home_screen_title">Vidya Sarthi</string>
+    <string name="status_prefix">Status: </string>
+    <string name="transmission_prefix">Transmission: </string>
+    <string name="host_phone_number_label">Host Phone Number</string>
+    <string name="content_type_label">Content Type</string>
+    <string name="connect_via_sms_button">Connect via SMS</string>
+    <string name="start_voice_call_button">Start Voice Call</string>
+    <string name="start_receiving_data_button">Start Receiving Data</string>
+    <string name="send_test_data_button">Send Test Data</string>
+    <string name="logs_title">Logs:</string>
+    <string name="weather_content_type">Weather</string>
+    <string name="agriculture_content_type">Agriculture</string>
+    <string name="news_content_type">News</string>
+    <string name="nptel_content_type">NPTEL</string>
+    <string name="no_content_available">No content available for %s. Connect to update.</string>
+    <string name="settings_screen_title">Settings</string>
+    <string name="user_pin_prefix">User PIN: </string>
+    <string name="reset_pin_button">Reset PIN</string>
+    <string name="data_rate_setting">Data Rate: %s</string>
+    <string name="data_rate_subtitle">Adjust the data transmission speed.</string>
+    <string name="cache_size_setting">Cache Size: %dMB</string>
+    <string name="cache_size_subtitle">Set the maximum cache size.</string>
+    <string name="auto_retry_setting">Auto-Retry: %d attempts</string>
+    <string name="auto_retry_subtitle">Set the number of retry attempts.</string>
+    <string name="mute_call_audio_setting">Mute Call Audio</string>
+    <string name="mute_call_audio_subtitle">Mute audio during data transmission.</string>
 </resources>

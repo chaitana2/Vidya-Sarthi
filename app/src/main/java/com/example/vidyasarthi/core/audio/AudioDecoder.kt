@@ -1,9 +1,14 @@
 package com.example.vidyasarthi.core.audio
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.util.Log
+import androidx.annotation.RequiresPermission
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -13,7 +18,7 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-class AudioDecoder {
+class AudioDecoder(private val context: Context) {
 
     companion object {
         private const val TAG = "AudioDecoder"
@@ -30,7 +35,13 @@ class AudioDecoder {
     val decodedData = _decodedData.asSharedFlow()
     private val scope = CoroutineScope(Dispatchers.Default)
 
+    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     fun startListening() {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "RECORD_AUDIO permission not granted")
+            return
+        }
+
         val bufferSize = AudioRecord.getMinBufferSize(
             SAMPLE_RATE,
             AudioFormat.CHANNEL_IN_MONO,
@@ -38,7 +49,7 @@ class AudioDecoder {
         )
 
         try {
-             // Note: Permission must be granted before calling this
+            // Note: Permission must be granted before calling this
             audioRecord = AudioRecord(
                 MediaRecorder.AudioSource.VOICE_CALL, // Fallback to MIC if VOICE_CALL fails on some devices
                 SAMPLE_RATE,
@@ -54,11 +65,11 @@ class AudioDecoder {
 
             audioRecord?.startRecording()
             isRecording = true
-            
+
             Thread {
                 processAudioStream(bufferSize)
             }.start()
-            
+
             Log.d(TAG, "Started audio decoding")
 
         } catch (e: Exception) {
@@ -70,10 +81,10 @@ class AudioDecoder {
         val buffer = ShortArray(bufferSize)
         val bitBuffer = ShortArray(SAMPLES_PER_BIT)
         var bitBufferIndex = 0
-        
+
         var currentByte = 0
         var bitCount = 0
-        
+
         while (isRecording) {
             val readCount = audioRecord?.read(buffer, 0, bufferSize) ?: 0
             if (readCount > 0) {
@@ -81,11 +92,11 @@ class AudioDecoder {
                     bitBuffer[bitBufferIndex++] = buffer[i]
                     if (bitBufferIndex >= SAMPLES_PER_BIT) {
                         val bit = decodeBit(bitBuffer)
-                        
+
                         // Shift bit into byte (assuming MSB first or LSB first, let's do MSB first)
                         currentByte = (currentByte shl 1) or bit
                         bitCount++
-                        
+
                         if (bitCount == 8) {
                             val finalByte = currentByte.toByte()
                             scope.launch {
@@ -94,7 +105,7 @@ class AudioDecoder {
                             currentByte = 0
                             bitCount = 0
                         }
-                        
+
                         bitBufferIndex = 0
                     }
                 }
@@ -103,30 +114,10 @@ class AudioDecoder {
     }
 
     private fun decodeBit(samples: ShortArray): Int {
-        val powerLow = goertzel(samples, FREQ_LOW)
-        val powerHigh = goertzel(samples, FREQ_HIGH)
-        
-        return if (powerHigh > powerLow) 1 else 0
-    }
+        val powerLow = AudioUtils.goertzel(samples, FREQ_LOW, SAMPLE_RATE)
+        val powerHigh = AudioUtils.goertzel(samples, FREQ_HIGH, SAMPLE_RATE)
 
-    private fun goertzel(samples: ShortArray, freq: Double): Double {
-        val k = (0.5 + ((samples.size * freq) / SAMPLE_RATE)).toInt()
-        val omega = (2.0 * PI * k) / samples.size
-        val sine = sin(omega)
-        val cosine = cos(omega)
-        val coeff = 2.0 * cosine
-        
-        var q0 = 0.0
-        var q1 = 0.0
-        var q2 = 0.0
-        
-        for (sample in samples) {
-            q0 = coeff * q1 - q2 + sample
-            q2 = q1
-            q1 = q0
-        }
-        
-        return q1 * q1 + q2 * q2 - q1 * q2 * coeff
+        return if (powerHigh > powerLow) 1 else 0
     }
 
     fun stopListening() {

@@ -51,9 +51,10 @@ While mobile penetration is high, reliable high-speed internet remains a challen
 | Feature | Description |
 | :--- | :--- |
 | **SMS Handshake** | Secure connection initiation via SMS to validate users and exchange session tokens before the voice call. |
+| **Content Selection** | Users can select the type of content they want to receive (e.g., Weather, Agriculture, News). |
 | **Acoustic Data Modem** | Encodes digital content into audio tones within the 300Hz-3400Hz voice band. |
 | **Voice Call Conference** | Supports multi-client broadcasting to serve multiple users simultaneously. |
-| **Offline Caching** | Intelligently caches content (Weather, Tutorials) for 7 days, allowing offline access. |
+| **Offline Caching** | Intelligently caches content for offline access. |
 | **Voice-First UI** | Speaks to the user ("Connection Established", "Receiving Data") in local languages. |
 | **Error Correction** | Implements CRC and ACK/Retry mechanisms to handle channel noise and packet loss. |
 | **Smart Compression** | Compresses text and data using GZIP to maximize throughput over the low-bandwidth channel. |
@@ -72,9 +73,10 @@ While mobile penetration is high, reliable high-speed internet remains a challen
 
 ### **Step 2: Connect to Host**
 1.  Enter the **Host Phone Number** in the provided box on the Home Screen.
-2.  Tap the **"Connect via SMS"** button.
-3.  Wait for the voice prompt: *"Connection Initiated"*.
-4.  Once accepted, the app will say *"Connection Established"*.
+2.  Select the desired **Content Type** from the dropdown menu.
+3.  Tap the **"Connect via SMS"** button.
+4.  Wait for the voice prompt: *"Connection Initiated"*.
+5.  Once accepted, the app will say *"Connection Established"*.
 
 ### **Step 3: Receive Content**
 1.  Tap **"Start Voice Call"** or answer the incoming call from the Host.
@@ -85,7 +87,7 @@ While mobile penetration is high, reliable high-speed internet remains a challen
 
 ### **Step 4: View Content**
 1.  Go to the **Content** tab (House icon).
-2.  Tap on **Weather** or **Agriculture** cards to view the downloaded information offline.
+2.  Select the appropriate content category to view the downloaded information offline.
 
 ---
 

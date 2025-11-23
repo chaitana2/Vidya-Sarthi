@@ -11,6 +11,8 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.example.vidyasarthi.R
 import android.content.pm.ServiceInfo
+import androidx.annotation.RequiresApi
+import com.example.vidyasarthi.VidyaSarthiApplication
 
 class CallService : Service() {
 
@@ -25,14 +27,17 @@ class CallService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        callManager = CallManager(this)
+        val application = applicationContext as VidyaSarthiApplication
+        callManager = CallManager(this, application.settingsManager)
         createNotificationChannel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_START_SERVICE -> startForegroundService()
-            ACTION_STOP_SERVICE -> stopForegroundService()
+            ACTION_STOP_SERVICE -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                stopForegroundService()
+            }
         }
         return START_STICKY
     }
@@ -47,6 +52,7 @@ class CallService : Service() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     private fun stopForegroundService() {
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
