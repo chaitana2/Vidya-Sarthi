@@ -102,7 +102,7 @@ While mobile penetration is high, reliable high-speed internet remains a challen
 ### **Build Instructions**
 1.  Clone the repository:
     ```bash
-    git clone https://github.com/example/VidyaSarthi.git
+    git clone https://github.com/chaitana2/Vidya-Sarthi.git
     ```
 2.  Open in Android Studio.
 3.  Sync Gradle files.
