@@ -27,6 +27,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import com.example.vidyasarthi.ui.ContentScreen
 import com.example.vidyasarthi.ui.HomeScreen
@@ -95,8 +96,8 @@ fun VidyaSarthiApp(viewModel: MainViewModel) {
             NavigationBar {
                 AppDestinations.entries.forEach { destination ->
                     NavigationBarItem(
-                        icon = { Icon(destination.icon, contentDescription = destination.label) },
-                        label = { Text(destination.label) },
+                        icon = { Icon(destination.icon, contentDescription = stringResource(destination.label)) },
+                        label = { Text(stringResource(destination.label)) },
                         selected = destination == currentDestination,
                         onClick = { currentDestination = destination }
                     )
@@ -113,10 +114,10 @@ fun VidyaSarthiApp(viewModel: MainViewModel) {
 }
 
 enum class AppDestinations(
-    val label: String,
+    val label: Int,
     val icon: ImageVector,
 ) {
-    HOME("Connect", Icons.Default.Call),
-    CONTENT("Content", Icons.Default.Home),
-    SETTINGS("Settings", Icons.Default.Settings),
+    HOME(R.string.destination_connect, Icons.Default.Call),
+    CONTENT(R.string.destination_content, Icons.Default.Home),
+    SETTINGS(R.string.destination_settings, Icons.Default.Settings),
 }

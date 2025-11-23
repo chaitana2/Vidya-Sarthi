@@ -1,7 +1,9 @@
 package com.example.vidyasarthi.core.call
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
@@ -22,19 +24,19 @@ class CallManager(private val context: Context, private val settingsManager: Set
 
     @RequiresApi(Build.VERSION_CODES.M)
     fun startCall(phoneNumber: String) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "CALL_PHONE permission not granted")
+            return
+        }
         try {
-            if (context.checkSelfPermission(android.Manifest.permission.CALL_PHONE) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                val uri = Uri.fromParts("tel", phoneNumber, null)
-                val intent = Intent(Intent.ACTION_CALL, uri)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                context.startActivity(intent)
-                Log.d(TAG, "Starting call to $phoneNumber")
+            val uri = Uri.fromParts("tel", phoneNumber, null)
+            val intent = Intent(Intent.ACTION_CALL, uri)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+            Log.d(TAG, "Starting call to $phoneNumber")
 
-                setupAudioForDataTransmission()
-                startCallService()
-            } else {
-                Log.e(TAG, "Missing CALL_PHONE permission")
-            }
+            setupAudioForDataTransmission()
+            startCallService()
         } catch (e: Exception) {
             Log.e(TAG, "Error starting call", e)
         }
