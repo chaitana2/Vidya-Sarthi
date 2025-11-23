@@ -1,15 +1,10 @@
 package com.example.vidyasarthi
 
 import android.app.Application
-import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.vidyasarthi.core.call.CallManager
-import com.example.vidyasarthi.core.data.SettingsManager
-import com.example.vidyasarthi.core.data.VidyaSarthiRepository
-import com.example.vidyasarthi.core.sms.SmsHandler
 import com.example.vidyasarthi.core.transmission.DataTransmissionManager
-import com.example.vidyasarthi.core.ui.VoiceUiManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +17,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = app.repository
     private val smsHandler = app.smsHandler
     private val settingsManager = app.settingsManager
-    private val callManager = CallManager(application, settingsManager)
+    private val callManager = app.callManager
     private val voiceUiManager = app.voiceUiManager
     private val dataTransmissionManager = app.dataTransmissionManager
 
@@ -55,6 +50,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 voiceUiManager.speak("Content received successfully")
             }
         }
+
+        viewModelScope.launch {
+            callManager.callState.collectLatest { state ->
+                val status = when (state) {
+                    CallManager.CallState.Idle -> "Call Idle"
+                    CallManager.CallState.Ringing -> "Call Ringing"
+                    CallManager.CallState.Active -> "Call Active"
+                    CallManager.CallState.Ended -> "Call Ended"
+                }
+                repository.updateStatus(status)
+            }
+        }
     }
 
     fun connectToHost(hostPhone: String, contentType: String) {
@@ -74,27 +81,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun startVoiceCall(hostPhone: String) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (hostPhone.isNotBlank()) {
-                callManager.startCall(hostPhone)
-                repository.addLog("Starting voice call to $hostPhone")
-            } else {
-                repository.addLog("No host phone provided")
-            }
-        }
-    }
-
-    fun answerCall() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            callManager.answerCall()
-            repository.updateStatus("Call Answered")
-        }
-    }
-
-    fun endCall() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            callManager.endCall()
-            repository.updateStatus("Call Ended")
+        if (hostPhone.isNotBlank()) {
+            callManager.startCall(hostPhone)
+            repository.addLog("Starting voice call to $hostPhone")
+        } else {
+            repository.addLog("No host phone provided")
         }
     }
 
@@ -118,10 +109,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 voiceUiManager.speak("Error sending content")
             }
         }
-    }
-
-    fun simulateReceive(content: String) {
-        dataTransmissionManager.simulateReceiveContent(content)
     }
 
     fun resetUserPin() {
@@ -148,9 +135,5 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setMuteAudio(mute: Boolean) {
         settingsManager.saveMuteAudio(mute)
         _muteAudio.value = mute
-    }
-
-    override fun onCleared() {
-        super.onCleared()
     }
 }

@@ -1,6 +1,7 @@
 package com.example.vidyasarthi
 
 import android.app.Application
+import com.example.vidyasarthi.core.call.CallManager
 import com.example.vidyasarthi.core.data.OfflineCache
 import com.example.vidyasarthi.core.data.SettingsManager
 import com.example.vidyasarthi.core.data.VidyaSarthiRepository
@@ -32,6 +33,9 @@ class VidyaSarthiApplication : Application() {
     lateinit var smsHandler: SmsHandler
         private set
 
+    lateinit var callManager: CallManager
+        private set
+
     override fun onCreate() {
         super.onCreate()
         repository = VidyaSarthiRepository(this)
@@ -41,6 +45,7 @@ class VidyaSarthiApplication : Application() {
         logManager = LogManager(this)
         smsHandler = SmsHandler(this, repository)
         dataTransmissionManager = DataTransmissionManager(this, offlineCache, logManager, smsHandler, voiceUiManager)
+        callManager = CallManager(this, settingsManager)
         logManager.cleanUpOldLogs()
     }
 

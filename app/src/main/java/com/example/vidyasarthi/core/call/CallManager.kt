@@ -10,15 +10,29 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.example.vidyasarthi.core.data.SettingsManager
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class CallManager(private val context: Context, private val settingsManager: SettingsManager) {
+
+    enum class CallState {
+        Idle, Ringing, Active, Ended
+    }
 
     companion object {
         private const val TAG = "CallManager"
     }
 
+    private val _callState = MutableStateFlow(CallState.Idle)
+    val callState: StateFlow<CallState> = _callState.asStateFlow()
+
     private val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
     private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
+    fun updateCallState(newState: CallState) {
+        _callState.value = newState
+    }
 
     @RequiresApi(Build.VERSION_CODES.M)
     fun startCall(phoneNumber: String) {

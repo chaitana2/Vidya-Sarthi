@@ -1,7 +1,8 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
+    id("io.gitlab.arturbosch.detekt")
 }
 
 android {
@@ -10,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.vidyasarthi"
-        minSdk = 21
+        minSdk = 23
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -37,6 +38,14 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
+}
+
+detekt {
+    buildUponDefaultConfig = true // Uses the default detekt config as a baseline
+    config.setFrom(files("$rootDir/detekt.yml")) // Apply custom configurations
 }
 
 dependencies {
@@ -48,22 +57,14 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     testImplementation(libs.junit)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-}
-
-tasks.register<Zip>("packageApkInZip") {
-    dependsOn("assembleDebug")
-    from(layout.buildDirectory.dir("outputs/apk/debug")) {
-        include("*.apk")
-    }
-    // Output to a directory inside 'app' so it is visible in the project view
-    destinationDirectory.set(layout.projectDirectory.dir("distribution"))
-    archiveFileName.set("VidyaSarthi_Debug_APK.zip")
-    entryCompression = org.gradle.api.tasks.bundling.ZipEntryCompression.STORED
 }

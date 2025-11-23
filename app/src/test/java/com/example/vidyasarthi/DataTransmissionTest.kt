@@ -13,12 +13,13 @@ class DataTransmissionTest {
     fun testEncryptionDecryption() {
         val manager = EncryptionManager()
         val originalData = "Test Message".toByteArray()
+        val pin = "1234"
         
-        val encryptedPair = manager.encrypt(originalData)
+        val encryptedPair = manager.encrypt(originalData, pin)
         assertNotNull("Encryption should succeed", encryptedPair)
         
         val (encrypted, iv) = encryptedPair!!
-        val decrypted = manager.decrypt(encrypted, iv)
+        val decrypted = manager.decrypt(encrypted, iv, pin)
         
         assertNotNull("Decryption should succeed", decrypted)
         assertEquals("Decrypted data should match original", String(originalData), String(decrypted!!))
