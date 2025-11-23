@@ -26,4 +26,6 @@
     <string name="auto_retry_subtitle">Set the number of retry attempts.</string>
     <string name="mute_call_audio_setting">Mute Call Audio</string>
     <string name="mute_call_audio_subtitle">Mute audio during data transmission.</string>
+    <string name="permissions_granted">Permissions Granted</string>
+    <string name="permissions_required">Permissions Required for Functionality</string>
 </resources>

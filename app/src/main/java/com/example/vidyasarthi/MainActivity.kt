@@ -2,6 +2,7 @@ package com.example.vidyasarthi
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -9,7 +10,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
@@ -41,9 +41,9 @@ class MainActivity : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             val allGranted = permissions.entries.all { it.value }
             if (allGranted) {
-                Toast.makeText(this, "Permissions Granted", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.permissions_granted, Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(this, "Permissions Required for Functionality", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, R.string.permissions_required, Toast.LENGTH_LONG).show()
             }
         }
 
@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun checkAndRequestPermissions() {
-        val permissions = arrayOf(
+        val permissions = mutableListOf(
             Manifest.permission.SEND_SMS,
             Manifest.permission.RECEIVE_SMS,
             Manifest.permission.READ_PHONE_STATE,
@@ -71,6 +71,10 @@ class MainActivity : ComponentActivity() {
             Manifest.permission.MODIFY_AUDIO_SETTINGS,
             Manifest.permission.READ_CALL_LOG
         )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
 
         val notGranted = permissions.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
