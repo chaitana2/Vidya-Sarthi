@@ -7,6 +7,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlin.random.Random
 
+private const val MIN_PIN = 100000
+private const val MAX_PIN = 999999
+private const val MAX_LOGS = 100
+
 class VidyaSarthiRepository(context: Context) {
 
     private val prefs: SharedPreferences = context.getSharedPreferences("vidya_prefs", Context.MODE_PRIVATE)
@@ -43,7 +47,7 @@ class VidyaSarthiRepository(context: Context) {
     }
     
     private fun generatePin(): String {
-        return Random.nextInt(100000, 999999).toString()
+        return Random.nextInt(MIN_PIN, MAX_PIN).toString()
     }
     
     fun resetPin() {
@@ -64,7 +68,7 @@ class VidyaSarthiRepository(context: Context) {
     fun addLog(message: String) {
         val currentLogs = _logs.value.toMutableList()
         currentLogs.add(0, "${System.currentTimeMillis()}: $message")
-        if (currentLogs.size > 100) {
+        if (currentLogs.size > MAX_LOGS) {
             currentLogs.removeAt(currentLogs.lastIndex)
         }
         _logs.value = currentLogs

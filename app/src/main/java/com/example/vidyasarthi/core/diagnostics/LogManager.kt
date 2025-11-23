@@ -8,6 +8,11 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+private const val MILLIS_IN_SECOND = 1000L
+private const val SECONDS_IN_MINUTE = 60
+private const val MINUTES_IN_HOUR = 60
+private const val HOURS_IN_DAY = 24
+
 class LogManager(private val context: Context) {
 
     companion object {
@@ -47,7 +52,7 @@ class LogManager(private val context: Context) {
         }
 
         val files = logDir.listFiles() ?: return
-        val retentionTime = System.currentTimeMillis() - (MAX_LOG_AGE_DAYS * 24 * 60 * 60 * 1000L)
+        val retentionTime = System.currentTimeMillis() - (MAX_LOG_AGE_DAYS * HOURS_IN_DAY * MINUTES_IN_HOUR * SECONDS_IN_MINUTE * MILLIS_IN_SECOND)
 
         for (file in files) {
             if (file.lastModified() < retentionTime) {

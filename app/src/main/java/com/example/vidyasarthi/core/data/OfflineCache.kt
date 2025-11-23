@@ -6,6 +6,13 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
+private const val BYTES_IN_KB = 1024
+private const val KB_IN_MB = 1024
+private const val MILLIS_IN_SECOND = 1000L
+private const val SECONDS_IN_MINUTE = 60
+private const val MINUTES_IN_HOUR = 60
+private const val HOURS_IN_DAY = 24
+
 class OfflineCache(private val context: Context) {
 
     companion object {
@@ -32,7 +39,7 @@ class OfflineCache(private val context: Context) {
             val file = File(cacheDir, fileName)
             FileOutputStream(file).use { it.write(content) }
             Log.d(TAG, "Content saved: $fileName")
-            
+
             manageCacheSize()
         } catch (e: IOException) {
             Log.e(TAG, "Error saving content", e)
@@ -54,7 +61,7 @@ class OfflineCache(private val context: Context) {
         val files = cacheDir.listFiles() ?: return
 
         var totalSize = files.sumOf { it.length() }
-        val maxSizeBytes = MAX_CACHE_SIZE_MB * 1024 * 1024
+        val maxSizeBytes = MAX_CACHE_SIZE_MB * KB_IN_MB * BYTES_IN_KB
 
         if (totalSize > maxSizeBytes) {
             // Delete oldest files
@@ -65,9 +72,9 @@ class OfflineCache(private val context: Context) {
                 if (totalSize <= maxSizeBytes) break
             }
         }
-        
+
         // Cleanup old files
-        val retentionTime = System.currentTimeMillis() - (RETENTION_DAYS * 24 * 60 * 60 * 1000L)
+        val retentionTime = System.currentTimeMillis() - (RETENTION_DAYS * HOURS_IN_DAY * MINUTES_IN_HOUR * SECONDS_IN_MINUTE * MILLIS_IN_SECOND)
         files.forEach { 
             if (it.lastModified() < retentionTime) {
                 it.delete()

@@ -90,9 +90,12 @@ class SmsHandler(
             val smsManager = context.getSystemService(SmsManager::class.java)
             smsManager.sendTextMessage(phoneNumber, null, message, null, null)
             Log.d(TAG, "Sent SMS to $phoneNumber: $message")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to send SMS", e)
-            repository.addLog("Failed to send SMS: ${e.message}")
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Failed to send SMS due to security issue", e)
+            repository.addLog("Failed to send SMS: Security issue: ${e.message}")
+        } catch (e: IllegalArgumentException) {
+            Log.e(TAG, "Invalid phone number or message", e)
+            repository.addLog("Failed to send SMS: Invalid arguments: ${e.message}")
         }
     }
 }

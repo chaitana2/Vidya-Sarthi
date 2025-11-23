@@ -3,6 +3,7 @@ package com.example.vidyasarthi.core.security
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import java.security.GeneralSecurityException
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
@@ -40,7 +41,7 @@ class EncryptionManager {
             cipher.init(Cipher.ENCRYPT_MODE, key, IvParameterSpec(iv))
             val encryptedData = cipher.doFinal(data)
             Pair(encryptedData, iv)
-        } catch (e: Exception) {
+        } catch (e: GeneralSecurityException) {
             Log.e(TAG, "Encryption failed", e)
             null
         }
@@ -53,7 +54,7 @@ class EncryptionManager {
             val cipher = Cipher.getInstance(TRANSFORMATION)
             cipher.init(Cipher.DECRYPT_MODE, key, IvParameterSpec(iv))
             cipher.doFinal(encryptedData)
-        } catch (e: Exception) {
+        } catch (e: GeneralSecurityException) {
             Log.e(TAG, "Decryption failed", e)
             null
         }

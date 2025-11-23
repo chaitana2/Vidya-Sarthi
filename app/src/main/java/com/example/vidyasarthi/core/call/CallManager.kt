@@ -12,6 +12,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.example.vidyasarthi.core.data.SettingsManager
+import java.lang.IllegalStateException
 
 class CallManager(private val context: Context, private val settingsManager: SettingsManager) {
 
@@ -37,40 +38,48 @@ class CallManager(private val context: Context, private val settingsManager: Set
 
             setupAudioForDataTransmission()
             startCallService()
-        } catch (e: Exception) {
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Error starting call due to security issue", e)
+        } catch (e: IllegalStateException) {
             Log.e(TAG, "Error starting call", e)
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
     fun answerCall() {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ANSWER_PHONE_CALLS) != PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "ANSWER_PHONE_CALLS permission not granted")
+            return
+        }
         try {
-            if (context.checkSelfPermission(android.Manifest.permission.ANSWER_PHONE_CALLS) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    telecomManager.acceptRingingCall()
-                    Log.d(TAG, "Attempted to answer call")
-                    setupAudioForDataTransmission()
-                    startCallService()
-                }
-            } else {
-                Log.e(TAG, "Missing ANSWER_PHONE_CALLS permission")
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                telecomManager.acceptRingingCall()
+                Log.d(TAG, "Attempted to answer call")
+                setupAudioForDataTransmission()
+                startCallService()
             }
-        } catch (e: Exception) {
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Error answering call due to security issue", e)
+        } catch (e: IllegalStateException) {
             Log.e(TAG, "Error answering call", e)
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
     fun endCall() {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ANSWER_PHONE_CALLS) != PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "ANSWER_PHONE_CALLS permission not granted")
+            return
+        }
         try {
-            if (context.checkSelfPermission(android.Manifest.permission.ANSWER_PHONE_CALLS) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                    telecomManager.endCall()
-                    Log.d(TAG, "Attempted to end call")
-                }
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                telecomManager.endCall()
+                Log.d(TAG, "Attempted to end call")
             }
             stopCallService()
-        } catch (e: Exception) {
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Error ending call due to security issue", e)
+        } catch (e: IllegalStateException) {
             Log.e(TAG, "Error ending call", e)
         }
     }
@@ -81,7 +90,9 @@ class CallManager(private val context: Context, private val settingsManager: Set
             audioManager.isSpeakerphoneOn = !settingsManager.getMuteAudio()
             audioManager.isMicrophoneMute = true // We interact via AudioRecord/AudioTrack
             Log.d(TAG, "Audio configured for data transmission. Speakerphone muted: ${settingsManager.getMuteAudio()}")
-        } catch (e: Exception) {
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Error setting up audio due to security issue", e)
+        } catch (e: IllegalStateException) {
             Log.e(TAG, "Error setting up audio", e)
         }
     }

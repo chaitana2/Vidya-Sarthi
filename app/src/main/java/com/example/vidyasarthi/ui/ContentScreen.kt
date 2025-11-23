@@ -43,11 +43,10 @@ fun ContentScreen(viewModel: MainViewModel, modifier: Modifier = Modifier) {
             }
         }
 
-        when (selectedTab) {
-            0 -> ContentList(viewModel, tabs[0])
-            1 -> ContentList(viewModel, tabs[1])
-            2 -> ContentList(viewModel, tabs[2])
-            3 -> ContentList(viewModel, tabs[3])
+        tabs.forEachIndexed { index, title ->
+            if (selectedTab == index) {
+                ContentList(viewModel, title)
+            }
         }
     }
 }
@@ -56,7 +55,13 @@ fun ContentScreen(viewModel: MainViewModel, modifier: Modifier = Modifier) {
 fun ContentList(viewModel: MainViewModel, category: String) {
     val receivedText by viewModel.receivedContentText.collectAsState()
     // In a real app, this would be a list of content for the given category
-    val items = if (receivedText.isNotEmpty() && category == stringResource(R.string.weather_content_type)) listOf(receivedText) else emptyList()
+    val items = if (receivedText.isNotEmpty() &&
+        category == stringResource(R.string.weather_content_type)
+    ) {
+        listOf(receivedText)
+    } else {
+        emptyList()
+    }
 
     LazyColumn(modifier = Modifier.padding(16.dp).semantics { contentDescription = "$category content list" }) {
         if (items.isEmpty()) {

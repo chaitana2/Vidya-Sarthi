@@ -5,6 +5,9 @@ import android.media.AudioManager
 import android.media.AudioTrack
 import android.util.Log
 
+private const val MILLIS_IN_SECOND = 1000
+private const val BITS_IN_BYTE = 8
+
 class AudioEncoder {
 
     companion object {
@@ -12,10 +15,11 @@ class AudioEncoder {
         private const val SAMPLE_RATE = 8000 // Standard for voice calls
         private const val FREQ_LOW = 1200.0 // Representing '0'
         private const val FREQ_HIGH = 2200.0 // Representing '1'
+        private const val DEFAULT_BIT_DURATION_MS = 10
     }
 
     private var audioTrack: AudioTrack? = null
-    private var bitDurationMs = 10 // 10ms per bit = 100bps
+    private var bitDurationMs = DEFAULT_BIT_DURATION_MS
 
     init {
         val bufferSize = AudioTrack.getMinBufferSize(
@@ -43,13 +47,13 @@ class AudioEncoder {
     }
 
     private fun generateAudioData(data: ByteArray): ShortArray {
-        val samplesPerBit = SAMPLE_RATE * bitDurationMs / 1000
-        val totalSamples = data.size * 8 * samplesPerBit
+        val samplesPerBit = SAMPLE_RATE * bitDurationMs / MILLIS_IN_SECOND
+        val totalSamples = data.size * BITS_IN_BYTE * samplesPerBit
         val audioData = ShortArray(totalSamples)
         var currentSample = 0
 
         for (byte in data) {
-            for (i in 7 downTo 0) {
+            for (i in (BITS_IN_BYTE - 1) downTo 0) {
                 val bit = (byte.toInt() shr i) and 1
                 val freq = if (bit == 1) FREQ_HIGH else FREQ_LOW
                 val tone = AudioUtils.generateTone(freq, bitDurationMs, SAMPLE_RATE)

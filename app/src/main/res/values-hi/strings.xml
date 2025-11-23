@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">विद्या सारथी</string>
+    <string name="home_screen_title">विद्या सारथी</string>
+    <string name="status_prefix">स्थिति: </string>
+    <string name="transmission_prefix">ट्रांसमिशन: </string>
+    <string name="host_phone_number_label">होस्ट फ़ोन नंबर</string>
+    <string name="content_type_label">कंटेंट का प्रकार</string>
+    <string name="connect_via_sms_button">एसएमएस के माध्यम से कनेक्ट करें</string>
+    <string name="start_voice_call_button">वॉयस कॉल शुरू करें</string>
+    <string name="start_receiving_data_button">डेटा प्राप्त करना शुरू करें</string>
+    <string name="send_test_data_button">परीक्षण डेटा भेजें</string>
+    <string name="logs_title">लॉग्स:</string>
+    <string name="weather_content_type">मौसम</string>
+    <string name="agriculture_content_type">कृषि</string>
+    <string name="news_content_type">समाचार</string>
+    <string name="nptel_content_type">एनपीटीईएल</string>
+    <string name="no_content_available">%s के लिए कोई कंटेंट उपलब्ध नहीं है। अपडेट करने के लिए कनेक्ट करें।</string>
+    <string name="settings_screen_title">सेटिंग्स</string>
+    <string name="user_pin_prefix">उपयोगकर्ता पिन: </string>
+    <string name="reset_pin_button">पिन रीसेट करें</string>
+    <string name="data_rate_setting">डेटा दर: %s</string>
+    <string name="data_rate_subtitle">डेटा ट्रांसमिशन की गति समायोजित करें।</string>
+    <string name="cache_size_setting">कैश आकार: %dMB</string>
+    <string name="cache_size_subtitle">अधिकतम कैश आकार सेट करें।</string>
+    <string name="auto_retry_setting">ऑटो-रीट्राई: %d प्रयास</string>
+    <string name="auto_retry_subtitle">रीट्राई प्रयासों की संख्या सेट करें।</string>
+    <string name="mute_call_audio_setting">कॉल ऑडियो म्यूट करें</string>
+    <string name="mute_call_audio_subtitle">डेटा ट्रांसमिशन के दौरान ऑडियो म्यूट करें।</string>
+    <string name="permissions_granted">अनुमतियाँ दी गईं</string>
+    <string name="permissions_required">कार्यक्षमता के लिए अनुमतियाँ आवश्यक हैं</string>
+    <string name="destination_connect">कनेक्ट</string>
+    <string name="destination_content">कंटेंट</string>
+    <string name="destination_settings">सेटिंग्स</string>
+    <string name="language_setting">भाषा</string>
+    <string name="language_setting_subtitle">अपनी पसंदीदा भाषा चुनें</string>
+</resources>

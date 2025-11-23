@@ -14,9 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
+import java.lang.IllegalStateException
 
 class AudioDecoder(private val context: Context) {
 
@@ -49,9 +47,8 @@ class AudioDecoder(private val context: Context) {
         )
 
         try {
-            // Note: Permission must be granted before calling this
             audioRecord = AudioRecord(
-                MediaRecorder.AudioSource.VOICE_CALL, // Fallback to MIC if VOICE_CALL fails on some devices
+                MediaRecorder.AudioSource.VOICE_CALL,
                 SAMPLE_RATE,
                 AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT,
@@ -72,7 +69,9 @@ class AudioDecoder(private val context: Context) {
 
             Log.d(TAG, "Started audio decoding")
 
-        } catch (e: Exception) {
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Failed to start audio recording due to security issue", e)
+        } catch (e: IllegalStateException) {
             Log.e(TAG, "Failed to start audio recording", e)
         }
     }
@@ -82,36 +81,38 @@ class AudioDecoder(private val context: Context) {
         val bitBuffer = ShortArray(SAMPLES_PER_BIT)
         var bitBufferIndex = 0
 
-        var currentByte = 0
-        var bitCount = 0
-
         while (isRecording) {
             val readCount = audioRecord?.read(buffer, 0, bufferSize) ?: 0
             if (readCount > 0) {
                 for (i in 0 until readCount) {
                     bitBuffer[bitBufferIndex++] = buffer[i]
                     if (bitBufferIndex >= SAMPLES_PER_BIT) {
-                        val bit = decodeBit(bitBuffer)
-
-                        // Shift bit into byte (assuming MSB first or LSB first, let's do MSB first)
-                        currentByte = (currentByte shl 1) or bit
-                        bitCount++
-
-                        if (bitCount == 8) {
-                            val finalByte = currentByte.toByte()
-                            scope.launch {
-                                _decodedData.emit(finalByte)
-                            }
-                            currentByte = 0
-                            bitCount = 0
-                        }
-
+                        processBit(bitBuffer)
                         bitBufferIndex = 0
                     }
                 }
             }
         }
     }
+
+    private fun processBit(bitBuffer: ShortArray) {
+        var currentByte = 0
+        var bitCount = 0
+        val bit = decodeBit(bitBuffer)
+
+        currentByte = (currentByte shl 1) or bit
+        bitCount++
+
+        if (bitCount == 8) {
+            val finalByte = currentByte.toByte()
+            scope.launch {
+                _decodedData.emit(finalByte)
+            }
+            currentByte = 0
+            bitCount = 0
+        }
+    }
+
 
     private fun decodeBit(samples: ShortArray): Int {
         val powerLow = AudioUtils.goertzel(samples, FREQ_LOW, SAMPLE_RATE)
@@ -125,7 +126,7 @@ class AudioDecoder(private val context: Context) {
         try {
             audioRecord?.stop()
             audioRecord?.release()
-        } catch (e: Exception) {
+        } catch (e: IllegalStateException) {
             Log.e(TAG, "Error stopping audio record", e)
         }
         audioRecord = null

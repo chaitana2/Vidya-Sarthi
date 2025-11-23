@@ -36,7 +36,16 @@ import com.example.vidyasarthi.ui.theme.VidyaSarthiTheme
 
 class MainActivity : ComponentActivity() {
 
-    private val viewModel: MainViewModel by viewModels()
+    private val viewModel: MainViewModel by viewModels {
+        val app = application as VidyaSarthiApplication
+        ViewModelFactory(
+            app.repository,
+            app.smsHandler,
+            app.dataTransmissionManager,
+            app.voiceUiManager,
+            app.callManager
+        )
+    }
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -108,7 +117,7 @@ fun VidyaSarthiApp(viewModel: MainViewModel) {
         when (currentDestination) {
             AppDestinations.HOME -> HomeScreen(viewModel, Modifier.padding(innerPadding))
             AppDestinations.CONTENT -> ContentScreen(viewModel, Modifier.padding(innerPadding))
-            AppDestinations.SETTINGS -> SettingsScreen(viewModel, Modifier.padding(innerPadding))
+            AppDestinations.SETTINGS -> SettingsScreen(mainViewModel = viewModel, modifier = Modifier.padding(innerPadding))
         }
     }
 }
@@ -117,7 +126,7 @@ enum class AppDestinations(
     val label: Int,
     val icon: ImageVector,
 ) {
-    HOME(R.string.destination_connect, Icons.Default.Call),
-    CONTENT(R.string.destination_content, Icons.Default.Home),
-    SETTINGS(R.string.destination_settings, Icons.Default.Settings),
+    HOME(R.string.destination_connect, Icons.Filled.Call),
+    CONTENT(R.string.destination_content, Icons.Filled.Home),
+    SETTINGS(R.string.destination_settings, Icons.Filled.Settings),
 }

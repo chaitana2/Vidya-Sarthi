@@ -1,11 +1,9 @@
 package com.example.vidyasarthi
 
-import android.app.Application
 import android.os.Build
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.vidyasarthi.core.call.CallManager
-import com.example.vidyasarthi.core.data.SettingsManager
 import com.example.vidyasarthi.core.data.VidyaSarthiRepository
 import com.example.vidyasarthi.core.sms.SmsHandler
 import com.example.vidyasarthi.core.transmission.DataTransmissionManager
@@ -16,15 +14,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class MainViewModel(application: Application) : AndroidViewModel(application) {
+private const val RECEIVED_CONTENT_LOG_LENGTH = 20
 
-    private val app = application as VidyaSarthiApplication
-    private val repository = app.repository
-    private val smsHandler = app.smsHandler
-    private val settingsManager = app.settingsManager
-    private val callManager = CallManager(application, settingsManager)
-    private val voiceUiManager = app.voiceUiManager
-    private val dataTransmissionManager = app.dataTransmissionManager
+class MainViewModel(
+    private val repository: VidyaSarthiRepository,
+    private val smsHandler: SmsHandler,
+    private val dataTransmissionManager: DataTransmissionManager,
+    private val voiceUiManager: VoiceUiManager,
+    private val callManager: CallManager,
+) : ViewModel() {
 
     val connectionStatus: StateFlow<String> = repository.connectionStatus
     val logs: StateFlow<List<String>> = repository.logs
@@ -34,54 +32,39 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _receivedContentText = MutableStateFlow("")
     val receivedContentText: StateFlow<String> = _receivedContentText.asStateFlow()
 
-    private val _dataRate = MutableStateFlow(settingsManager.getDataRate())
-    val dataRate: StateFlow<String> = _dataRate.asStateFlow()
-
-    private val _cacheSize = MutableStateFlow(settingsManager.getCacheSize())
-    val cacheSize: StateFlow<Int> = _cacheSize.asStateFlow()
-
-    private val _autoRetry = MutableStateFlow(settingsManager.getAutoRetry())
-    val autoRetry: StateFlow<Int> = _autoRetry.asStateFlow()
-
-    private val _muteAudio = MutableStateFlow(settingsManager.getMuteAudio())
-    val muteAudio: StateFlow<Boolean> = _muteAudio.asStateFlow()
-
     init {
         viewModelScope.launch {
             dataTransmissionManager.receivedContent.collectLatest { bytes ->
                 val text = String(bytes, Charsets.UTF_8)
                 _receivedContentText.value = text
-                repository.addLog("Content received: ${text.take(20)}...")
+                repository.addLog("Content received: ${text.take(RECEIVED_CONTENT_LOG_LENGTH)}...")
                 voiceUiManager.speak("Content received successfully")
             }
         }
     }
 
-    fun connectToHost(hostPhone: String, contentType: String) {
-        viewModelScope.launch {
-            if (hostPhone.isBlank()) {
-                voiceUiManager.speak("Please enter a host phone number")
-                return@launch
-            }
-
-            repository.setHostPhone(hostPhone)
-            repository.updateStatus("Initiating Connection...")
-            voiceUiManager.speak("Initiating connection")
-
-            val clientId = repository.getUserPin()
-            smsHandler.sendConnectionRequest(hostPhone, clientId, contentType)
+    fun connectToHost(hostPhone: String, contentType: String) = viewModelScope.launch {
+        if (hostPhone.isBlank()) {
+            voiceUiManager.speak("Please enter a host phone number")
+            return@launch
         }
+
+        repository.setHostPhone(hostPhone)
+        repository.updateStatus("Initiating Connection...")
+        voiceUiManager.speak("Initiating connection")
+
+        val clientId = repository.getUserPin()
+        smsHandler.sendConnectionRequest(hostPhone, clientId, contentType)
     }
 
     fun startVoiceCall(hostPhone: String) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (hostPhone.isNotBlank()) {
-                callManager.startCall(hostPhone)
-                repository.addLog("Starting voice call to $hostPhone")
-            } else {
-                repository.addLog("No host phone provided")
-            }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
+        if (hostPhone.isBlank()) {
+            repository.addLog("No host phone provided")
+            return
         }
+        callManager.startCall(hostPhone)
+        repository.addLog("Starting voice call to $hostPhone")
     }
 
     fun answerCall() {
@@ -104,19 +87,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         voiceUiManager.speak("Listening for data")
     }
 
-    fun sendData(content: String, hostPhone: String) {
-        viewModelScope.launch {
-            repository.addLog("Sending data...")
-            voiceUiManager.speak("Sending content")
-            val pin = repository.getUserPin()
-            val success = dataTransmissionManager.sendContent(content, hostPhone, pin)
-            if (success) {
-                repository.addLog("Data sent successfully")
-                voiceUiManager.speak("Content sent successfully")
-            } else {
-                repository.addLog("Data send failed")
-                voiceUiManager.speak("Error sending content")
-            }
+    fun sendData(content: String, hostPhone: String) = viewModelScope.launch {
+        repository.addLog("Sending data...")
+        voiceUiManager.speak("Sending content")
+        val pin = repository.getUserPin()
+        val success = dataTransmissionManager.sendContent(content, hostPhone, pin)
+        if (success) {
+            repository.addLog("Data sent successfully")
+            voiceUiManager.speak("Content sent successfully")
+        } else {
+            repository.addLog("Data send failed")
+            voiceUiManager.speak("Error sending content")
         }
     }
 
@@ -128,29 +109,5 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         repository.resetPin()
         repository.addLog("User PIN reset")
         voiceUiManager.speak("PIN reset successfully")
-    }
-
-    fun setDataRate(rate: String) {
-        settingsManager.saveDataRate(rate)
-        _dataRate.value = rate
-    }
-
-    fun setCacheSize(size: Int) {
-        settingsManager.saveCacheSize(size)
-        _cacheSize.value = size
-    }
-
-    fun setAutoRetry(retries: Int) {
-        settingsManager.saveAutoRetry(retries)
-        _autoRetry.value = retries
-    }
-
-    fun setMuteAudio(mute: Boolean) {
-        settingsManager.saveMuteAudio(mute)
-        _muteAudio.value = mute
-    }
-
-    override fun onCleared() {
-        super.onCleared()
     }
 }

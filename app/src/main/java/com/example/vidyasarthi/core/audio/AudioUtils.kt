@@ -4,12 +4,14 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
+private const val MILLIS_IN_SECOND = 1000
+
 object AudioUtils {
 
     fun generateTone(freq: Double, durationMs: Int, sampleRate: Int): ShortArray {
-        val numSamples = (sampleRate * durationMs / 1000)
+        val numSamples = (sampleRate * durationMs / MILLIS_IN_SECOND)
         val sample = ShortArray(numSamples)
-        val phaseIncrement = 2 * Math.PI * freq / sampleRate
+        val phaseIncrement = 2 * PI * freq / sampleRate
         var phase = 0.0
         
         for (i in 0 until numSamples) {
@@ -22,7 +24,6 @@ object AudioUtils {
     fun goertzel(samples: ShortArray, freq: Double, sampleRate: Int): Double {
         val k = (0.5 + ((samples.size * freq) / sampleRate)).toInt()
         val omega = (2.0 * PI * k) / samples.size
-        val sine = sin(omega)
         val cosine = cos(omega)
         val coeff = 2.0 * cosine
         
